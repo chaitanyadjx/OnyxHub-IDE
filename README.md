@@ -1,11 +1,13 @@
 # README
 
-## About
+## About Project
 
-This template uses plain JS / HTML and CSS.
+Gloried HTML reader, made with Go and Wails. Has some issues. Still working on them. Feel free to contribute.
+Basically, idea is to view the prototype design as HTML can have them on graph. And easier to view and make small changes.
 
-You can configure the project by editing `wails.json`. More information about the project settings can be found
-here: https://wails.io/docs/reference/project-config
+## Screenshots
+<img width="1920" height="1080" alt="image" src="https://github.com/user-attachments/assets/1a190c86-51be-4d1f-b613-8904c011ff11" />
+<img width="1920" height="1080" alt="image" src="https://github.com/user-attachments/assets/75a9ea3f-b129-42d4-af37-d40b955999aa" />
 
 ## Live Development
 
