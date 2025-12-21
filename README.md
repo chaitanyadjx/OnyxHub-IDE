@@ -3,11 +3,14 @@
 ## About Project
 
 Gloried HTML reader, made with Go and Wails. Has some issues. Still working on them. Feel free to contribute.
-Basically, idea is to view the prototype design as HTML can have them on graph. And easier to view and make small changes.
+Basically, idea is to view the prototype design as HTML and have them on graph. And easier to view and make small changes.
 
 ## Screenshots
 <img width="1920" height="1080" alt="image" src="https://github.com/user-attachments/assets/1a190c86-51be-4d1f-b613-8904c011ff11" />
 <img width="1920" height="1080" alt="image" src="https://github.com/user-attachments/assets/75a9ea3f-b129-42d4-af37-d40b955999aa" />
+<img width="1920" height="1080" alt="image" src="https://github.com/user-attachments/assets/1aa74596-a693-48ae-bc53-6c38cf047804" />
+<img width="1920" height="1080" alt="image" src="https://github.com/user-attachments/assets/c8fa41ce-acce-47ce-b654-20620614ac44" />
+
 
 ## Live Development
 
