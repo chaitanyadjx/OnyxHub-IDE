@@ -1,0 +1,10 @@
+{
+  "$schema": "https://wails.io/schemas/config.v2.json",
+  "name": "OnyxHub",
+  "outputfilename": "OnyxHub",
+  "wailsjsdir": "./frontend",
+  "author": {
+    "name": "Chaitanya Jambhulkar",
+    "email": "chaitanyajambhulkar51@gmail.com"
+  }
+}

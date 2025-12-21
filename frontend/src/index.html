@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Onyx Hub</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        :root { --bg: #ffffff; --text: #111111; --border: #e4e4e7; --node-bg: #ffffff; }
+        .dark { --bg: #0b0b0b; --text: #fafafa; --border: #27272a; --node-bg: #121212; }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', sans-serif; }
+        body { background: var(--bg); color: var(--text); height: 100vh; display: flex; overflow: hidden; transition: 0.3s; }
+
+        /* Sidebar */
+        aside { width: 320px; border-right: 1px solid var(--border); display: flex; flex-direction: column; background: var(--bg); z-index: 100; }
+        .sidebar-header { padding: 30px 24px; border-bottom: 1px solid var(--border); }
+        .sidebar-actions { display: flex; gap: 15px; padding: 15px 24px; border-bottom: 1px solid var(--border); font-size: 10px; font-weight: 800; color: #71717a; text-transform: uppercase; cursor: pointer; }
+        .file-list { flex: 1; overflow-y: auto; padding: 15px; }
+        .file-item { padding: 12px; border-radius: 8px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; font-size: 13px; }
+        .file-item:hover { background: #f4f4f5; }
+
+        /* Workspace */
+        main { flex: 1; position: relative; display: flex; flex-direction: column; }
+        #graph-view { flex: 1; position: relative; background-image: radial-gradient(var(--border) 1px, transparent 1px); background-size: 40px 40px; }
+        #svg-canvas { position: absolute; inset: 0; pointer-events: none; z-index: 5; width: 100%; height: 100%; }
+
+        /* Nodes - Bigger */
+        .node { 
+            position: absolute; width: 280px; padding: 20px; 
+            background: var(--node-bg); border: 1px solid var(--border); 
+            border-radius: 16px; cursor: grab; z-index: 10; 
+            box-shadow: 0 10px 25px rgba(0,0,0,0.05); 
+        }
+        .node.selected { border: 3px solid var(--text); }
+        .node-title { font-size: 15px; font-weight: 700; outline: none; border-bottom: 1px dashed #71717a; display: block; margin-bottom: 12px; }
+
+        /* IDE Editor */
+        #editor-view { flex: 1; display: none; flex-direction: column; background: #050505; color: #fff; }
+        #code-area { flex: 1; border: none; padding: 40px; font-family: 'Fira Code', monospace; font-size: 15px; background: transparent; color: inherit; outline: none; resize: none; line-height: 1.7; }
+
+        .btn-ui { background: var(--text); color: var(--bg); border: none; padding: 10px 16px; border-radius: 8px; font-size: 10px; font-weight: 800; cursor: pointer; text-transform: uppercase; }
+        .appearance-btn { position: fixed; top: 25px; right: 25px; z-index: 500; width: 44px; height: 44px; border-radius: 50%; border: 1px solid var(--border); background: var(--bg); color: var(--text); cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 20px; }
+        
+        #toast { position: fixed; bottom: 40px; left: 50%; transform: translateX(-50%); background: #111; color: #fff; padding: 12px 28px; border-radius: 30px; font-size: 13px; opacity: 0; transition: 0.3s; z-index: 3000; }
+        #preview-overlay { position: fixed; inset: 0; background: var(--bg); z-index: 2000; display: none; }
+    </style>
+</head>
+<body class="dark">
+
+    <button class="appearance-btn" onclick="document.body.classList.toggle('dark')">◐</button>
+
+    <aside>
+        <div class="sidebar-header">
+            <h1 style="font-size: 24px; font-weight: 800;">Onyx Hub</h1>
+            <button onclick="scanDirectory()" class="btn-ui" style="width:100%; margin-top:20px;">Open Project</button>
+        </div>
+        <div class="sidebar-actions">
+            <span onclick="toggleView('graph')">Graph</span>
+            <span onclick="createFile()">+ New File</span>
+        </div>
+        <div id="explorer" class="file-list"></div>
+    </aside>
+
+    <main>
+        <div id="graph-view">
+            <svg id="svg-canvas">
+                <defs><marker id="arrow" viewBox="0 0 10 10" refX="10" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0 0 L10 5 L0 10 z" fill="#71717a"/></marker></defs>
+            </svg>
+            <div id="nodes-layer"></div>
+        </div>
+
+        <div id="editor-view">
+            <div style="padding: 15px 30px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; background: var(--bg);">
+                <span id="active-filename" style="font-size:12px; font-weight:700; color:#71717a;">EDITOR</span>
+                <button onclick="saveCode()" class="btn-ui" style="background:#10b981; color:#fff;">Save Code</button>
+            </div>
+            <textarea id="code-area" spellcheck="false"></textarea>
+        </div>
+    </main>
+
+    <div id="toast">Message</div>
+
+    <div id="preview-overlay">
+        <button onclick="closeFullscreen()" style="position:absolute; bottom:40px; right:40px; width:60px; height:60px; border-radius:50%; background:#000; color:#fff; border:none; cursor:pointer; font-size:24px;">✕</button>
+        <iframe id="full-frame" style="width:100%; height:100%; border:none;"></iframe>
+    </div>
+
+    <script>
+        let root = ""; let edges = []; let selectedId = null; let dragTarget = null; let offset = {x:0, y:0}; let activeFile = "";
+
+        function notify(m) { if(!m) return; const t = document.getElementById('toast'); t.innerText = m; t.style.opacity = 1; setTimeout(()=> t.style.opacity = 0, 2000); }
+
+        async function scanDirectory() {
+            root = await window.go.main.App.SelectFolder();
+            if (root) refreshUI();
+        }
+
+        async function refreshUI() {
+            const files = await window.go.main.App.GetHTMLFiles(root);
+            const explorer = document.getElementById('explorer');
+            explorer.innerHTML = "";
+            files.forEach(f => {
+                const div = document.createElement('div');
+                div.className = 'file-item';
+                div.innerHTML = `<span>${f}</span><span onclick="handleDelete(event, '${f}')" style="color:#ef4444; font-size:10px; font-weight:800;">DEL</span>`;
+                div.onclick = () => openEditor(f);
+                explorer.appendChild(div);
+            });
+            renderNodes(files);
+        }
+
+        function toggleView(v) {
+            document.getElementById('graph-view').style.display = v === 'graph' ? 'block' : 'none';
+            document.getElementById('editor-view').style.display = v === 'editor' ? 'flex' : 'none';
+        }
+
+        async function openEditor(f) {
+            activeFile = f;
+            try {
+                const code = await window.go.main.App.ReadFileContent(root, f);
+                document.getElementById('code-area').value = code;
+                document.getElementById('active-filename').innerText = f.toUpperCase();
+                toggleView('editor');
+            } catch (e) { notify("Error loading file"); }
+        }
+
+        async function saveCode() {
+            const res = await window.go.main.App.SaveCode(root, activeFile, document.getElementById('code-area').value);
+            notify(res);
+        }
+
+        async function createFile() {
+            const res = await window.go.main.App.CreateFile(root);
+            if(res) { notify(res); refreshUI(); }
+        }
+
+        async function handleDelete(e, f) {
+            e.stopPropagation();
+            const res = await window.go.main.App.DeleteFile(root, f);
+            if(res !== "Cancelled") { notify(res); refreshUI(); }
+        }
+
+        function createNode(file, x, y) {
+            const id = 'n' + Math.random().toString(36).substr(2, 5);
+            const el = document.createElement('div');
+            el.className = 'node'; el.id = id; el.style.left = x+'px'; el.style.top = y+'px';
+            el.innerHTML = `<span class="node-title" contenteditable="true" id="t-${id}">${file.replace('.html','')}</span>
+                <div style="display:flex; gap:8px; margin-top:15px;">
+                    <button class="btn-ui" style="flex:1; font-size:8px;" onclick="viewPreview('${file}')">Preview</button>
+                    <button class="btn-ui" style="flex:1; font-size:8px;" onclick="syncTags('${id}','${file}')">Sync</button>
+                </div>`;
+
+            el.addEventListener('mousedown', (e) => {
+                if(e.target.tagName === 'BUTTON' || e.target.contentEditable === "true") return;
+                if (selectedId === null) { selectedId = id; el.classList.add('selected'); }
+                else if (selectedId === id) { selectedId = null; el.classList.remove('selected'); }
+                else { 
+                    edges.push({from:selectedId, to:id}); 
+                    document.getElementById(selectedId).classList.remove('selected'); 
+                    selectedId = null; updateLines(); 
+                }
+                dragTarget = el; offset.x = e.clientX - el.offsetLeft; offset.y = e.clientY - el.offsetTop;
+            });
+            document.getElementById('nodes-layer').appendChild(el);
+        }
+
+        function updateLines() {
+            const svg = document.getElementById('svg-canvas');
+            Array.from(svg.querySelectorAll('path')).forEach(p => p.remove());
+            edges.forEach(edge => {
+                const s = document.getElementById(edge.from); const e = document.getElementById(edge.to);
+                if(!s || !e) return;
+                const x1 = s.offsetLeft + 140, y1 = s.offsetTop + 55, x2 = e.offsetLeft + 140, y2 = e.offsetTop + 55;
+                const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+                path.setAttribute("d", `M ${x1} ${y1} L ${x2} ${y2}`);
+                path.setAttribute("stroke", "#71717a"); path.setAttribute("fill", "none"); 
+                path.setAttribute("stroke-width", "2"); path.setAttribute("marker-end", "url(#arrow)");
+                svg.appendChild(path);
+            });
+        }
+
+        async function syncTags(id, f) { notify(await window.go.main.App.SyncFile(root, f, document.getElementById('t-'+id).innerText)); }
+        async function viewPreview(f) { 
+            const c = await window.go.main.App.ReadFileContent(root, f); 
+            document.getElementById('full-frame').src = URL.createObjectURL(new Blob([c], {type:'text/html'})); 
+            document.getElementById('preview-overlay').style.display='block'; 
+        }
+        function closeFullscreen() { document.getElementById('preview-overlay').style.display='none'; }
+        function renderNodes(fs) { document.getElementById('nodes-layer').innerHTML = ""; fs.forEach((f,i)=>createNode(f, 40+i*320, 100)); updateLines(); }
+        
+        window.onmousemove = (e) => { if(dragTarget) { dragTarget.style.left = (e.clientX-offset.x)+'px'; dragTarget.style.top = (e.clientY-offset.y)+'px'; updateLines(); }};
+        window.onmouseup = () => dragTarget = null;
+    </script>
+</body>
+</html>
