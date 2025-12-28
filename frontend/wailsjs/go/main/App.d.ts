@@ -9,6 +9,8 @@ export function GetHTMLFiles(arg1:string):Promise<Array<string>>;
 
 export function ReadFileContent(arg1:string,arg2:string):Promise<string>;
 
+export function RenameFileNative(arg1:string,arg2:string):Promise<string>;
+
 export function SaveCode(arg1:string,arg2:string,arg3:string):Promise<string>;
 
 export function SelectFolder():Promise<string>;

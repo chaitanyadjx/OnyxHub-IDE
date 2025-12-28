@@ -18,6 +18,7 @@ func NewApp() *App { return &App{} }
 
 func (a *App) startup(ctx context.Context) { a.ctx = ctx }
 
+// SelectFolder opens a native OS directory picker
 func (a *App) SelectFolder() string {
 	folder, _ := runtime.OpenDirectoryDialog(a.ctx, runtime.OpenDialogOptions{
 		Title: "Select Onyx Project Folder",
@@ -25,6 +26,7 @@ func (a *App) SelectFolder() string {
 	return folder
 }
 
+// GetHTMLFiles scans for all .html files in the root
 func (a *App) GetHTMLFiles(dir string) []string {
 	var files []string
 	entries, _ := os.ReadDir(dir)
@@ -36,7 +38,7 @@ func (a *App) GetHTMLFiles(dir string) []string {
 	return files
 }
 
-// Fixed: Returning (string, error) correctly for Wails Bridge
+// ReadFileContent loads raw text for the editor or preview
 func (a *App) ReadFileContent(dir string, name string) (string, error) {
 	path := filepath.Join(dir, name)
 	content, err := os.ReadFile(path)
@@ -46,6 +48,7 @@ func (a *App) ReadFileContent(dir string, name string) (string, error) {
 	return string(content), nil
 }
 
+// SaveCode overwrites file content from the IDE
 func (a *App) SaveCode(dir string, name string, code string) string {
 	path := filepath.Join(dir, name)
 	err := os.WriteFile(path, []byte(code), 0644)
@@ -55,35 +58,54 @@ func (a *App) SaveCode(dir string, name string, code string) string {
 	return "File Saved Successfully"
 }
 
-// Native Create: Uses OS Save Dialog instead of JS prompt
+// CreateFile triggers a NATIVE save dialog for the filename
 func (a *App) CreateFile(dir string) string {
 	name, _ := runtime.SaveFileDialog(a.ctx, runtime.SaveDialogOptions{
-		Title:            "Create New Page",
+		Title:            "New HTML Page",
 		DefaultDirectory: dir,
 		Filters:          []runtime.FileFilter{{DisplayName: "HTML Files", Pattern: "*.html"}},
 	})
 	if name == "" {
 		return ""
 	}
-	tpl := "<!DOCTYPE html>\n<html>\n<head><title>New Page</title></head>\n<body>\n<h1>New Page</h1>\n</body>\n</html>"
+	tpl := "<!DOCTYPE html>\n<html>\n<head><title>New Page</title></head>\n<body>\n<h1>Onyx Page</h1>\n</body>\n</html>"
 	os.WriteFile(name, []byte(tpl), 0644)
 	return "Created: " + filepath.Base(name)
 }
 
-// Native Delete: Uses OS Confirmation Dialog
+// RenameFileNative triggers a native OS dialog to rename the file
+func (a *App) RenameFileNative(dir string, oldName string) (string, error) {
+	newName, _ := runtime.SaveFileDialog(a.ctx, runtime.SaveDialogOptions{
+		Title:            "Rename File",
+		DefaultDirectory: dir,
+		DefaultFilename:  oldName,
+		Filters:          []runtime.FileFilter{{DisplayName: "HTML Files", Pattern: "*.html"}},
+	})
+	if newName == "" {
+		return "Cancelled", nil
+	}
+	err := os.Rename(filepath.Join(dir, oldName), newName)
+	if err != nil {
+		return "", err
+	}
+	return "Renamed Successfully", nil
+}
+
+// DeleteFile triggers a NATIVE confirmation message
 func (a *App) DeleteFile(dir string, name string) string {
 	res, _ := runtime.MessageDialog(a.ctx, runtime.MessageDialogOptions{
 		Type:    runtime.QuestionDialog,
 		Title:   "Confirm Delete",
-		Message: fmt.Sprintf("Are you sure you want to delete %s?", name),
+		Message: fmt.Sprintf("Permanently delete %s?", name),
 	})
 	if res == "No" || res == "Cancel" {
 		return "Cancelled"
 	}
 	os.Remove(filepath.Join(dir, name))
-	return "File Deleted"
+	return "File Removed"
 }
 
+// SyncFile updates internal HTML tags
 func (a *App) SyncFile(dir string, name string, newTitle string) string {
 	path := filepath.Join(dir, name)
 	content, _ := os.ReadFile(path)
@@ -92,5 +114,5 @@ func (a *App) SyncFile(dir string, name string, newTitle string) string {
 	updated := reT.ReplaceAllString(string(content), "<title>"+newTitle+"</title>")
 	updated = reH.ReplaceAllString(updated, "<h1>"+newTitle+"</h1>")
 	os.WriteFile(path, []byte(updated), 0644)
-	return "Sync Successful"
+	return "File Synced"
 }

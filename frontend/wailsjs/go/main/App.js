@@ -18,6 +18,10 @@ export function ReadFileContent(arg1, arg2) {
   return window['go']['main']['App']['ReadFileContent'](arg1, arg2);
 }
 
+export function RenameFileNative(arg1, arg2) {
+  return window['go']['main']['App']['RenameFileNative'](arg1, arg2);
+}
+
 export function SaveCode(arg1, arg2, arg3) {
   return window['go']['main']['App']['SaveCode'](arg1, arg2, arg3);
 }
