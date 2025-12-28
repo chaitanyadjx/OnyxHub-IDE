@@ -3,13 +3,13 @@
 ## About Project
 
 Gloried HTML reader, made with Go and Wails. Has some issues. Still working on them. Feel free to contribute.
-Basically, idea is to view the prototype design as HTML and have them on graph. And easier to view and make small changes.
+Basically, idea is to view the prototype design as HTML and easy to view rather than opening in browser. And easier to view and make small changes.
 
 ## Screenshots
-<img width="1920" height="1080" alt="image" src="https://github.com/user-attachments/assets/1a190c86-51be-4d1f-b613-8904c011ff11" />
-<img width="1920" height="1080" alt="image" src="https://github.com/user-attachments/assets/75a9ea3f-b129-42d4-af37-d40b955999aa" />
-<img width="1920" height="1080" alt="image" src="https://github.com/user-attachments/assets/1aa74596-a693-48ae-bc53-6c38cf047804" />
-<img width="1920" height="1080" alt="image" src="https://github.com/user-attachments/assets/c8fa41ce-acce-47ce-b654-20620614ac44" />
+<img width="1890" height="1045" alt="image" src="https://github.com/user-attachments/assets/e4d059b4-4a1f-4864-a070-20706e555e3e" />
+<img width="1918" height="1040" alt="image" src="https://github.com/user-attachments/assets/2d153a90-52b2-44db-b934-50acef330788" />
+<img width="1918" height="1040" alt="image" src="https://github.com/user-attachments/assets/8271d42d-2e86-4406-becc-26860288b6d1" />
+<img width="1903" height="1040" alt="image" src="https://github.com/user-attachments/assets/ecfc7b96-7a35-4457-91bc-2478d5b16c16" />
 
 
 ## Live Development
