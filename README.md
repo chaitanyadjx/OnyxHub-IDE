@@ -9,7 +9,7 @@ Basically, idea is to view the prototype design as HTML and easy to view rather 
 <img width="1890" height="1045" alt="image" src="https://github.com/user-attachments/assets/e4d059b4-4a1f-4864-a070-20706e555e3e" />
 <img width="1918" height="1040" alt="image" src="https://github.com/user-attachments/assets/2d153a90-52b2-44db-b934-50acef330788" />
 <img width="1918" height="1040" alt="image" src="https://github.com/user-attachments/assets/8271d42d-2e86-4406-becc-26860288b6d1" />
-<img width="1903" height="1040" alt="image" src="https://github.com/user-attachments/assets/ecfc7b96-7a35-4457-91bc-2478d5b16c16" />
+
 
 
 ## Live Development
