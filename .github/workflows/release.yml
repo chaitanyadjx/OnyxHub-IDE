@@ -5,6 +5,9 @@ on:
     tags:
       - 'v*'
 
+permissions:
+  contents: write
+
 jobs:
   build:
     strategy:
@@ -13,13 +16,10 @@ jobs:
         include:
           - os: windows-latest
             platform: windows/amd64
-            artifact_name: OnyxHub-Windows.exe
           - os: macos-latest
             platform: darwin/universal
-            artifact_name: OnyxHub-MacOS.app
-          - os: ubuntu-latest
+          - os: ubuntu-22.04
             platform: linux/amd64
-            artifact_name: OnyxHub-Linux
 
     runs-on: ${{ matrix.os }}
 
@@ -36,68 +36,65 @@ jobs:
         run: go install github.com/wailsapp/wails/v2/cmd/wails@latest
 
       - name: Install Linux Dependencies
-        if: matrix.os == 'ubuntu-latest'
+        if: matrix.os == 'ubuntu-22.04'
         run: |
           sudo apt-get update
-          sudo apt-get install -y libgtk-3-dev libwebkit2gtk-4.1-dev build-essential pkg-config
+          sudo apt-get install -y libgtk-3-dev libwebkit2gtk-4.0-dev build-essential pkg-config
 
       - name: Build Wails App
-        run: |
-          wails build -platform ${{ matrix.platform }} -clean
+        run: wails build -platform ${{ matrix.platform }} -clean
 
       # Linux AppImage Packaging
       - name: Package Linux AppImage
-        if: matrix.os == 'ubuntu-latest'
+        if: matrix.os == 'ubuntu-22.04'
         run: |
-          # Install appimagetool
-          wget https://github.com/AppImage/AppImageKit/releases/download/13/appimagetool-x86_64.AppImage
+          wget -q https://github.com/AppImage/AppImageKit/releases/download/13/appimagetool-x86_64.AppImage
           chmod +x appimagetool-x86_64.AppImage
-          
-          # Prepare AppDir
+
           mkdir -p OnyxHub.AppDir/usr/bin
           cp build/bin/OnyxHub OnyxHub.AppDir/usr/bin/
-          
-          # Create Desktop file
-          echo "[Desktop Entry]
+
+          cat > OnyxHub.AppDir/onyxhub.desktop << 'EOF'
+          [Desktop Entry]
           Name=OnyxHub
           Exec=OnyxHub
           Icon=onyxhub
           Type=Application
-          Categories=Development;" > OnyxHub.AppDir/onyxhub.desktop
-          
-          # Copy icon
+          Categories=Development;
+          EOF
+
           cp build/appicon.png OnyxHub.AppDir/onyxhub.png
-          
-          # Create AppRun
-          echo '#!/bin/sh
+
+          cat > OnyxHub.AppDir/AppRun << 'EOF'
+          #!/bin/sh
           SELF=$(readlink -f "$0")
           HERE=${SELF%/*}
           export PATH="${HERE}/usr/bin:${PATH}"
-          exec OnyxHub "$@"' > OnyxHub.AppDir/AppRun
+          exec OnyxHub "$@"
+          EOF
           chmod +x OnyxHub.AppDir/AppRun
-          
-          # Build AppImage
-          ARCH=x86_64 ./appimagetool-x86_64.AppImage --appimage-extract-and-run OnyxHub.AppDir OnyxHub-v${{ github.ref_name }}-Linux.AppImage
 
-      # macOS Packaging (Zip the .app)
+          ARCH=x86_64 ./appimagetool-x86_64.AppImage --appimage-extract-and-run OnyxHub.AppDir OnyxHub-${{ github.ref_name }}-Linux.AppImage
+
+      # macOS Packaging
       - name: Package macOS App
         if: matrix.os == 'macos-latest'
         run: |
           cd build/bin
-          zip -r ../../OnyxHub-v${{ github.ref_name }}-MacOS.zip OnyxHub.app
+          zip -r ../../OnyxHub-${{ github.ref_name }}-MacOS.zip OnyxHub.app
 
       # Windows Rename
       - name: Prepare Windows Artifact
         if: matrix.os == 'windows-latest'
+        shell: pwsh
         run: |
-          cp build/bin/OnyxHub.exe OnyxHub-v${{ github.ref_name }}-Windows.exe
+          Copy-Item build/bin/OnyxHub.exe OnyxHub-${{ github.ref_name }}-Windows.exe
 
       - name: Upload Release Assets
         uses: softprops/action-gh-release@v2
         with:
+          generate_release_notes: true
           files: |
-            OnyxHub-v${{ github.ref_name }}-Windows.exe
-            OnyxHub-v${{ github.ref_name }}-MacOS.zip
-            OnyxHub-v${{ github.ref_name }}-Linux.AppImage
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+            OnyxHub-${{ github.ref_name }}-Windows.exe
+            OnyxHub-${{ github.ref_name }}-MacOS.zip
+            OnyxHub-${{ github.ref_name }}-Linux.AppImage
