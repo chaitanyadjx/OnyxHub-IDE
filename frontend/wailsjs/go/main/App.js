@@ -10,6 +10,10 @@ export function DeleteFile(arg1, arg2) {
   return window['go']['main']['App']['DeleteFile'](arg1, arg2);
 }
 
+export function GetFileTree(arg1) {
+  return window['go']['main']['App']['GetFileTree'](arg1);
+}
+
 export function GetHTMLFiles(arg1) {
   return window['go']['main']['App']['GetHTMLFiles'](arg1);
 }

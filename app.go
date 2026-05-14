@@ -18,6 +18,60 @@ func NewApp() *App { return &App{} }
 
 func (a *App) startup(ctx context.Context) { a.ctx = ctx }
 
+type FileNode struct {
+	Name     string      `json:"name"`
+	Path     string      `json:"path"`
+	IsDir    bool        `json:"isDir"`
+	Children []*FileNode `json:"children"`
+}
+
+// GetFileTree recursively scans a directory and builds a file tree of .html files
+func (a *App) GetFileTree(dir string) *FileNode {
+	entries, err := os.ReadDir(dir)
+	if err != nil {
+		return nil
+	}
+
+	var children []*FileNode
+	for _, entry := range entries {
+		// Skip hidden files/directories like .git
+		if len(entry.Name()) > 0 && entry.Name()[0] == '.' {
+			continue
+		}
+		
+		childPath := filepath.Join(dir, entry.Name())
+		if entry.IsDir() {
+			childNode := a.GetFileTree(childPath)
+			if childNode != nil { // only add if it contains html files
+				children = append(children, childNode)
+			}
+		} else {
+			if filepath.Ext(entry.Name()) == ".html" {
+				children = append(children, &FileNode{
+					Name:  entry.Name(),
+					Path:  childPath,
+					IsDir: false,
+				})
+			}
+		}
+	}
+
+	// If it's not the root directory and has no valid children, prune it
+	// We return nil so the parent doesn't add it.
+	// But for the root directory, we might want to return it anyway.
+	// Let's just return nil if no children, the frontend can handle a nil root.
+	if len(children) == 0 {
+		return nil
+	}
+
+	return &FileNode{
+		Name:     filepath.Base(dir),
+		Path:     dir,
+		IsDir:    true,
+		Children: children,
+	}
+}
+
 // SelectFolder opens a native OS directory picker
 func (a *App) SelectFolder() string {
 	folder, _ := runtime.OpenDirectoryDialog(a.ctx, runtime.OpenDialogOptions{

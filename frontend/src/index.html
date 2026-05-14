@@ -1,368 +1,980 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ONYX // SWISS MONO v9.3</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <title>ONYX IDE</title>
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 256 256' fill='%235E6AD2'><path d='M184,120v61.65a8,8,0,0,1-2.34,5.65l-34.35,34.35a8,8,0,0,1-13.57-4.53L128,176ZM136,72H74.35a8,8,0,0,0-5.65,2.34L34.35,108.69a8,8,0,0,0,4.53,13.57L80,128ZM40,216c37.65,0,50.69-19.69,54.56-28.18L68.18,161.44C59.69,165.31,40,178.35,40,216Z' opacity='0.2'/><path d='M223.85,47.12a16,16,0,0,0-15-15c-12.58-.75-44.73.4-71.41,27.07L132.69,64H74.36A15.91,15.91,0,0,0,63,68.68L28.7,103a16,16,0,0,0,9.07,27.16l38.47,5.37,44.21,44.21,5.37,38.49a15.94,15.94,0,0,0,10.78,12.92,16.11,16.11,0,0,0,5.1.83A15.91,15.91,0,0,0,153,227.3L187.32,193A15.91,15.91,0,0,0,192,181.64V123.31l4.77-4.77C223.45,91.86,224.6,59.71,223.85,47.12ZM74.36,80h42.33L77.16,119.52,40,114.34Zm74.41-9.45a76.65,76.65,0,0,1,59.11-22.47,76.46,76.46,0,0,1-22.42,59.16L128,164.68,91.32,128ZM176,181.64,141.67,216l-5.19-37.17L176,139.31Zm-74.16,9.5C97.34,201,82.29,224,40,224a8,8,0,0,1-8-8c0-42.29,23-57.34,32.86-61.85a8,8,0,0,1,6.64,14.56c-6.43,2.93-20.62,12.36-23.12,38.91,26.55-2.5,36-16.69,38.91-23.12a8,8,0,1,1,14.56,6.64Z'/></svg>">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap"
+        rel="stylesheet">
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
     <style>
         :root {
-            --bg: #efefef;          
-            --surface: #e5e5e5;     
-            --text: #1a1a1a;        
-            --border: #867a7a;      
-            --muted: #737373;       
-            --pad: 32px;
-            --selection-bg: #222222;
-            --selection-text: #efefef;
+            /* Light Theme (Vercel-like Minimalist) */
+            --bg-base: #ffffff;
+            --bg-surface: #f7f7f8;
+            --bg-sidebar: #f7f7f8;
+            --bg-activity: #ebebec;
+            --border: #e5e5e5;
+            --text-main: #111827;
+            --text-muted: #6b7280;
+            --accent: #000000;
+            --accent-hover: #333333;
+            --accent-text: #ffffff;
+            --selection: rgba(0, 0, 0, 0.05);
+
+            --ui-font: 'Inter', -apple-system, sans-serif;
+            --code-font: 'JetBrains Mono', monospace;
+            --radius: 6px;
+            --shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+            --transition: 0.2s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
         .dark {
-            --bg: #1a1a1a;          
-            --surface: #242424;     
-            --text: #d4d4d4;        
-            --border: #404040;      
-            --muted: #808080;       
-            --selection-bg: #d4d4d4;
-            --selection-text: #1a1a1a;
+            /* Dark Theme (Linear-like Sleek) */
+            --bg-base: #0E0F11;
+            --bg-surface: #141517;
+            --bg-sidebar: #141517;
+            --bg-activity: #1A1C20;
+            --border: #27282D;
+            --text-main: #F3F4F6;
+            --text-muted: #8B8D98;
+            --accent: #5E6AD2;
+            --accent-hover: #727DE3;
+            --accent-text: #ffffff;
+            --selection: rgba(94, 106, 210, 0.2);
+            --shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
         }
 
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-        ::selection { background: var(--selection-bg); color: var(--selection-text); }
-        
-        body { 
-            font-family: 'Inter', sans-serif; 
-            background: var(--bg); 
-            color: var(--text); 
-            height: 100vh; 
-            display: flex; 
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: var(--ui-font);
+            background: var(--bg-base);
+            color: var(--text-main);
+            height: 100vh;
+            display: flex;
             flex-direction: column;
             overflow: hidden;
-            transition: background 0.4s ease, color 0.4s ease;
+            transition: background 0.3s ease, color 0.3s ease;
         }
 
-        /* --- Header --- */
+        /* --- Header / Titlebar --- */
         header {
-            display: grid;
-            grid-template-columns: repeat(12, 1fr);
-            border-bottom: 1px solid var(--border);
-            padding: 20px var(--pad);
+            display: flex;
+            justify-content: space-between;
             align-items: center;
-            background: var(--bg);
+            height: 44px;
+            padding: 0 16px;
+            background: var(--bg-activity);
+            border-bottom: 1px solid var(--border);
+            -webkit-app-region: drag;
+            /* For desktop app dragging */
+            z-index: 100;
         }
 
-        .brand-block { grid-column: span 4; }
-        .brand-name { font-weight: 900; font-size: 24px; letter-spacing: -1px; text-transform: uppercase; }
-        
-        .header-meta { grid-column: span 5; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 2px; color: var(--muted); }
-        .header-ctrl { grid-column: span 3; text-align: right; }
+        .brand {
+            font-weight: 600;
+            font-size: 13px;
+            letter-spacing: 0.5px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--text-main);
+        }
 
-        /* --- Layout --- */
-        #stage {
-            display: grid;
-            grid-template-columns: repeat(12, 1fr);
+        .brand i {
+            color: var(--accent);
+            font-size: 16px;
+        }
+
+        .header-actions {
+            -webkit-app-region: no-drag;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .icon-btn {
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            cursor: pointer;
+            width: 28px;
+            height: 28px;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            transition: var(--transition);
+        }
+
+        .icon-btn:hover {
+            background: var(--border);
+            color: var(--text-main);
+        }
+
+        /* --- Main Layout --- */
+        #app-layout {
+            display: flex;
             flex: 1;
             overflow: hidden;
         }
 
-        aside {
-            grid-column: span 3;
+        /* --- Activity Bar --- */
+        .activity-bar {
+            width: 48px;
+            background: var(--bg-activity);
             border-right: 1px solid var(--border);
-            padding: var(--pad);
             display: flex;
             flex-direction: column;
-            justify-content: space-between;
-            background: var(--surface);
-        }
-
-        main {
-            grid-column: span 9;
-            padding: var(--pad);
-            overflow-y: auto;
-            background-color: var(--bg);
-        }
-
-        /* --- View Toggle (Visibility Fix) --- */
-        .view-controls {
-            display: flex;
-            justify-content: space-between;
             align-items: center;
-            margin-bottom: 24px;
-            padding-bottom: 16px;
-            border-bottom: 1px solid var(--border);
+            padding: 12px 0;
+            gap: 16px;
+            z-index: 50;
         }
 
-        .view-toggle-btns { 
-            display: flex; 
-            gap: 1px; 
-            background: var(--border); 
-            border: 1px solid var(--border);
-        }
-        
-        .view-toggle-btns .btn-swiss {
-            padding: 8px 16px;
-            border: none;
+        .activity-item {
+            width: 32px;
+            height: 32px;
+            border-radius: var(--radius);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            color: var(--text-muted);
+            cursor: pointer;
+            transition: var(--transition);
         }
 
-        /* --- Shared UI Components --- */
-        .btn-swiss {
-            background: var(--text); color: var(--bg); border: 1px solid var(--text);
-            padding: 12px 20px; font-weight: 700; font-size: 10px;
-            text-transform: uppercase; cursor: pointer; transition: 0.2s;
-            letter-spacing: 1px;
-        }
-        
-        .btn-outline { background: transparent; color: var(--text); border: 1px solid var(--border); }
-        .btn-active { background: var(--text); color: var(--bg); }
-        .btn-active:hover { background: var(--text); color: var(--bg); opacity: 0.9; }
-
-        /* --- Grid View Layout --- */
-        .card-container.grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-            gap: 1px;
+        .activity-item.active {
+            color: var(--text-main);
             background: var(--border);
-            border: 1px solid var(--border);
         }
 
-        .grid .file-card {
-            background: var(--bg);
-            padding: 30px;
-            min-height: 260px;
+        .activity-item:hover {
+            color: var(--text-main);
+        }
+
+        /* --- Sidebar (Explorer) --- */
+        .sidebar {
+            width: 260px;
+            background: var(--bg-sidebar);
+            border-right: 1px solid var(--border);
             display: flex;
             flex-direction: column;
-            transition: all 0.2s ease;
+            z-index: 40;
         }
-        
-        .grid .file-card:hover { background: var(--text); color: var(--bg); }
-        .grid .card-num { font-weight: 900; font-size: 60px; opacity: 0.1; line-height: 1; margin-bottom: 15px; }
-        .grid .card-title { font-weight: 800; font-size: 18px; text-transform: uppercase; margin-bottom: 5px; }
 
-        /* --- Compact List View Layout --- */
-        .card-container.list {
+        .sidebar-header {
+            padding: 12px 16px;
             display: flex;
-            flex-direction: column;
-            border-top: 1px solid var(--border);
-        }
-
-        .list .file-card {
-            background: var(--bg);
-            padding: 10px 20px;
-            display: grid;
-            grid-template-columns: 40px 1fr auto;
+            justify-content: space-between;
             align-items: center;
-            border-bottom: 1px solid var(--border);
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-muted);
+        }
+
+        .sidebar-actions {
+            display: flex;
+            gap: 2px;
+        }
+
+        .path-label-wrap {
+            padding: 0 16px 12px 16px;
+        }
+
+        #path-label {
+            font-family: var(--code-font);
+            font-size: 10px;
+            color: var(--text-muted);
+            word-break: break-all;
+            background: var(--border);
+            padding: 4px 6px;
+            border-radius: 4px;
+            user-select: none;
+        }
+
+        #file-tree {
+            flex: 1;
+            overflow-y: auto;
+            padding: 0 8px 16px 8px;
+        }
+
+        /* Tree Nodes */
+        .tree-node {
+            font-size: 13px;
+            margin-bottom: 1px;
+        }
+
+        .tree-item {
+            padding: 6px 8px;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            color: var(--text-muted);
+            cursor: pointer;
+            user-select: none;
             transition: background 0.1s;
         }
 
-        .list .file-card:hover { background: var(--surface); color: var(--text); }
-        .list .card-num { font-family: 'JetBrains Mono'; font-size: 11px; opacity: 0.5; }
-        .list .card-title { font-weight: 700; font-size: 13px; text-transform: uppercase; }
-        .list .card-subtitle { display: none; } /* Hide in compact view */
-        .list .card-actions .btn-swiss { padding: 4px 10px; font-size: 9px; }
+        .tree-item:hover {
+            background: var(--selection);
+            color: var(--text-main);
+        }
 
-        /* Button Visibility Fix for Grid Hover */
-        .grid .file-card:hover .btn-swiss.btn-outline { border-color: var(--bg); color: var(--bg); }
-        .grid .file-card:hover .btn-swiss.btn-outline:hover { background: var(--bg); color: var(--text); }
+        .tree-item.active {
+            background: var(--selection);
+            color: var(--accent);
+            font-weight: 500;
+        }
 
-        /* --- Editor & Overlay Styles --- */
-        #editor { position: fixed; inset: 0; background: var(--bg); z-index: 1000; display: none; grid-template-columns: 350px 1fr; }
-        .editor-side { border-right: 1px solid var(--border); padding: var(--pad); background: var(--surface); }
-        #code-area { flex: 1; border: none; outline: none; background: transparent; color: var(--text); font-family: 'JetBrains Mono', monospace; font-size: 16px; padding: 40px; line-height: 1.6; width: 100%; height: 100%; resize: none; }
-        #preview { position: fixed; inset: 0; background: var(--bg); z-index: 2000; display: none; flex-direction: column; }
-        .preview-bar { padding: 15px 30px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; background: var(--surface); }
-        #frame-wrap { flex: 1; padding: 30px; background: var(--surface); }
-        iframe { width: 100%; height: 100%; border: 1px solid var(--border); background: white; }
-        #toast { position: fixed; top: 0; left: 0; width: 100%; background: var(--text); color: var(--bg); padding: 10px; text-align: center; font-weight: 900; font-size: 10px; transform: translateY(-100%); transition: 0.3s; z-index: 5000; }
+        .tree-icon {
+            margin-right: 8px;
+            font-size: 15px;
+            display: flex;
+            align-items: center;
+        }
+
+        .tree-children {
+            margin-left: 14px;
+            border-left: 1px solid var(--border);
+            padding-left: 4px;
+        }
+
+        /* --- Main Editor Area --- */
+        main.workspace {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background: var(--bg-base);
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* --- Welcome Screen --- */
+        #welcome-screen {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 40px;
+        }
+
+        .welcome-logo {
+            font-size: 64px;
+            background: linear-gradient(135deg, var(--accent), #b4baf5);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 24px;
+        }
+
+        #welcome-screen h1 {
+            font-size: 24px;
+            font-weight: 600;
+            margin-bottom: 12px;
+        }
+
+        #welcome-screen p {
+            color: var(--text-muted);
+            font-size: 14px;
+            margin-bottom: 32px;
+            max-width: 300px;
+            line-height: 1.5;
+        }
+
+        .btn {
+            background: var(--accent);
+            color: var(--accent-text);
+            border: none;
+            padding: 8px 16px;
+            font-weight: 500;
+            font-size: 13px;
+            border-radius: var(--radius);
+            cursor: pointer;
+            transition: var(--transition);
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .btn:hover {
+            background: var(--accent-hover);
+            transform: translateY(-1px);
+        }
+
+        .btn-ghost {
+            background: transparent;
+            color: var(--text-main);
+            box-shadow: none;
+            border: 1px solid var(--border);
+        }
+
+        .btn-ghost:hover {
+            background: var(--bg-surface);
+            transform: none;
+        }
+
+        /* --- Editor --- */
+        #editor-container {
+            display: none;
+            flex: 1;
+            flex-direction: column;
+        }
+
+        .editor-tabs {
+            height: 40px;
+            background: var(--bg-surface);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--border);
+            padding-right: 16px;
+        }
+
+        .tab {
+            height: 100%;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 0 20px;
+            background: var(--bg-base);
+            border-right: 1px solid var(--border);
+            border-top: 2px solid var(--accent);
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--text-main);
+        }
+
+        .tab i {
+            color: var(--accent);
+            font-size: 16px;
+        }
+
+        .editor-toolbar {
+            display: flex;
+            gap: 8px;
+        }
+
+        #code-area {
+            flex: 1;
+            background: transparent;
+            color: var(--text-main);
+            border: none;
+            outline: none;
+            font-family: var(--code-font);
+            font-size: 14px;
+            line-height: 1.6;
+            padding: 24px;
+            resize: none;
+            tab-size: 4;
+        }
+
+        /* --- Preview Modal --- */
+        #preview {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(4px);
+            z-index: 2000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 40px;
+        }
+
+        .preview-window {
+            background: var(--bg-base);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            border: 1px solid var(--border);
+            animation: popIn 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        @keyframes popIn {
+            from {
+                opacity: 0;
+                transform: scale(0.98);
+            }
+
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        .preview-header {
+            padding: 12px 20px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: var(--bg-surface);
+        }
+
+        .preview-title {
+            font-size: 13px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .preview-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        #frame-wrap {
+            flex: 1;
+            background: #e5e5e5;
+            display: flex;
+            padding: 24px;
+        }
+
+        iframe {
+            flex: 1;
+            border: none;
+            background: #fff;
+            border-radius: 4px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        /* --- Feedback (Toast & Loader) --- */
+        #toast {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            background: var(--text-main);
+            color: var(--bg-base);
+            padding: 12px 20px;
+            border-radius: var(--radius);
+            font-size: 13px;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            opacity: 0;
+            transform: translateY(10px);
+            transition: var(--transition);
+            z-index: 5000;
+            box-shadow: var(--shadow);
+        }
+
+        #toast.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        #loader-overlay {
+            position: absolute;
+            inset: 0;
+            background: var(--bg-base);
+            opacity: 0;
+            pointer-events: none;
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: opacity 0.2s;
+        }
+
+        #loader-overlay.active {
+            opacity: 0.7;
+            pointer-events: all;
+        }
+
+        
+        .spinner {
+            width: 32px; height: 32px;
+            border: 3px solid var(--border);
+            border-top-color: var(--accent);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+        @keyframes spin { 100% { transform: rotate(360deg); } }
+
+
+        
+        /* --- Sidebar Panels --- */
+        .sidebar-panel { display: none; flex-direction: column; height: 100%; }
+        .sidebar-panel.active { display: flex; }
+        .search-container { padding: 12px 16px; border-bottom: 1px solid var(--border); }
+        .search-input { width: 100%; padding: 8px 12px; background: var(--bg-base); border: 1px solid var(--border); color: var(--text-main); border-radius: 4px; font-family: var(--ui-font); outline: none; font-size: 13px; }
+        .search-input:focus { border-color: var(--accent); }
+        .search-results { flex: 1; overflow-y: auto; padding: 8px; }
+        .search-result-item { padding: 6px 8px; border-radius: 4px; cursor: pointer; margin-bottom: 2px; display: flex; flex-direction: column; }
+        .search-result-item:hover { background: var(--selection); }
+        .search-result-name { font-size: 13px; font-weight: 500; display: flex; align-items: center; }
+        .search-result-path { font-size: 11px; color: var(--text-muted); font-family: var(--code-font); }
+        .settings-container { padding: 16px; flex: 1; overflow-y: auto; }
+        .setting-group { margin-bottom: 20px; }
+        .setting-label { display: block; font-size: 12px; font-weight: 600; color: var(--text-muted); margin-bottom: 8px; }
+        .setting-control { width: 100%; padding: 8px; background: var(--bg-base); border: 1px solid var(--border); color: var(--text-main); border-radius: 4px; font-family: var(--ui-font); font-size: 13px; cursor: pointer; }
+
+        /* Scrollbar styling */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--border);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--text-muted);
+        }
     </style>
 </head>
+
 <body class="light">
 
-    <div id="toast">SYSTEM_ACK</div>
-
+    <!-- Header / Titlebar -->
     <header>
-        <div class="brand-block">
-            <h1 class="brand-name">ONYX.SW</h1>
-        </div>
-        <div class="header-meta">UI_REFINED // COMPACT_LOGIC</div>
-        <div class="header-ctrl">
-            <button class="btn-swiss btn-outline" onclick="document.body.classList.toggle('dark')">UI_COLOR_MODE</button>
+        <div class="brand"><i class="ph-fill ph-code-block"></i> Onyx IDE</div>
+        <div class="header-actions">
+            <button class="icon-btn" onclick="toggleTheme()" title="Toggle Theme" id="theme-toggle">
+                <i class="ph-bold ph-moon"></i>
+            </button>
         </div>
     </header>
 
-    <div id="stage">
-        <aside>
-            <div class="action-stack">
-                <p class="label-mono" style="margin-bottom: 20px; opacity: 0.5;">01 // CONTROL</p>
-                <button class="btn-swiss" style="width:100%; margin-bottom:8px;" onclick="scanDirectory()">MOUNT_DIR</button>
-                <button class="btn-swiss btn-outline" style="width:100%; margin-bottom:8px;" onclick="syncDirectory()">SYNC_NODES</button>
-                <button class="btn-swiss btn-outline" style="width:100%;" onclick="createFile()">CREATE_NODE</button>
+    <div id="app-layout">
+        <!-- Activity Bar -->
+        
+        <nav class="activity-bar">
+            <div class="activity-item active" title="Explorer" onclick="switchSidebarPanel('explorer')"><i class="ph-bold ph-files"></i></div>
+            <div class="activity-item" title="Search" onclick="switchSidebarPanel('search')"><i class="ph-bold ph-magnifying-glass"></i></div>
+            <div style="flex:1"></div>
+            <div class="activity-item" title="Settings" onclick="switchSidebarPanel('settings')"><i class="ph-bold ph-gear"></i></div>
+        </nav>
+
+
+        <!-- Sidebar -->
+        
+        <aside class="sidebar">
+            <div id="panel-explorer" class="sidebar-panel active">
+                <div class="sidebar-header">
+                    <span>Explorer</span>
+                    <div class="sidebar-actions">
+                        <button class="icon-btn" onclick="scanDirectory()" title="Open Folder"><i class="ph-bold ph-folder-open"></i></button>
+                        <button class="icon-btn" onclick="createFile()" title="New File"><i class="ph-bold ph-file-plus"></i></button>
+                        <button class="icon-btn" onclick="syncDirectory()" title="Refresh"><i class="ph-bold ph-arrows-clockwise"></i></button>
+                    </div>
+                </div>
+                <div class="path-label-wrap">
+                    <div id="path-label">No folder opened</div>
+                </div>
+                <div id="file-tree">
+                    <div style="padding: 10px; font-size: 13px; color: var(--text-muted); text-align: center;">
+                        Click the folder icon to open a project.
+                    </div>
+                </div>
             </div>
-            <div>
-                <p class="label-mono" style="margin-bottom: 10px; opacity: 0.5;">02 // PATH</p>
-                <p id="path-label" style="font-family: 'JetBrains Mono'; font-size: 9px; opacity:0.4;">UNMAPPED</p>
+
+            <div id="panel-search" class="sidebar-panel">
+                <div class="sidebar-header">
+                    <span>Search</span>
+                </div>
+                <div class="search-container">
+                    <input type="text" id="search-input" class="search-input" placeholder="Search files..." oninput="performSearch()">
+                </div>
+                <div id="search-results" class="search-results"></div>
+            </div>
+
+            <div id="panel-settings" class="sidebar-panel">
+                <div class="sidebar-header">
+                    <span>Settings</span>
+                </div>
+                <div class="settings-container">
+                    <div class="setting-group">
+                        <label class="setting-label">Theme</label>
+                        <select class="setting-control" id="setting-theme" onchange="applySettings()">
+                            <option value="light">Light</option>
+                            <option value="dark">Dark</option>
+                        </select>
+                    </div>
+                    <div class="setting-group">
+                        <label class="setting-label">Editor Font Size</label>
+                        <select class="setting-control" id="setting-fontsize" onchange="applySettings()">
+                            <option value="12px">12px</option>
+                            <option value="14px" selected>14px</option>
+                            <option value="16px">16px</option>
+                            <option value="18px">18px</option>
+                        </select>
+                    </div>
+                    <div class="setting-group">
+                        <label class="setting-label">Word Wrap</label>
+                        <select class="setting-control" id="setting-wrap" onchange="applySettings()">
+                            <option value="off">Off</option>
+                            <option value="on">On</option>
+                        </select>
+                    </div>
+                </div>
             </div>
         </aside>
 
-        <main>
-            <div class="view-controls">
-                <div>
-                    <p class="label-mono" style="opacity: 0.5;">03 // NODES</p>
-                    <span id="file-count" style="font-weight: 900; font-size: 14px;">00 OBJECTS</span>
-                </div>
-                <div class="view-toggle-btns">
-                    <button id="grid-btn" class="btn-swiss btn-outline btn-active" onclick="setView('grid')">GRID</button>
-                    <button id="list-btn" class="btn-swiss btn-outline " onclick="setView('list')">LIST</button>
+
+        <!-- Main Workspace -->
+        <main class="workspace">
+            <div id="loader-overlay">
+                <div class="spinner"></div>
+            </div>
+
+            <!-- Welcome Screen -->
+            <div id="welcome-screen">
+                <i class="ph-duotone ph-rocket-launch welcome-logo"></i>
+                <h1>Welcome to Onyx</h1>
+                <p>A sleek, lightweight environment for crafting HTML applications.</p>
+                <div style="display: flex; gap: 12px;">
+                    <button class="btn" onclick="scanDirectory()"><i class="ph-bold ph-folder-open"></i> Open
+                        Folder</button>
+                    <button class="btn btn-ghost" onclick="createFile()"><i class="ph-bold ph-file-plus"></i> New
+                        File</button>
                 </div>
             </div>
-            
-            <div id="card-grid" class="card-container grid"></div>
+
+            <!-- Editor Container -->
+            <div id="editor-container">
+                <div class="editor-tabs">
+                    <div class="tab">
+                        <i class="ph-fill ph-file-html"></i> <span id="active-fn">untitled.html</span>
+                    </div>
+                    <div class="editor-toolbar">
+                        <button class="btn btn-ghost" onclick="openPreview(activeFile)"><i class="ph-bold ph-play"></i>
+                            Preview</button>
+                        <button class="btn" onclick="saveCode()"><i class="ph-bold ph-floppy-disk"></i> Save</button>
+                    </div>
+                </div>
+                <textarea id="code-area" spellcheck="false" placeholder="Start coding here..."></textarea>
+            </div>
         </main>
     </div>
 
-    <div id="editor">
-        <div class="editor-side">
-            <p class="label-mono" style="margin-bottom: 20px;">NODE_EDIT</p>
-            <h2 id="active-fn" style="font-weight: 900; font-size: 24px; word-break: break-all;">UNNAMED.HTML</h2>
-            <div style="margin-top: auto; display: flex; flex-direction: column; gap: 8px;">
-                <button class="btn-swiss" onclick="saveCode()">SAVE_NODE</button>
-                <button class="btn-swiss btn-outline" onclick="toggleEditor(false)">CLOSE</button>
+    <!-- Preview Modal -->
+    <div id="preview">
+        <div class="preview-window">
+            <div class="preview-header">
+                <div class="preview-title"><i class="ph-fill ph-browser"></i> <span id="preview-fn">Preview</span></div>
+                <div class="preview-actions">
+                    <button class="btn btn-ghost" onclick="launchFullscreen()"><i class="ph-bold ph-corners-out"></i>
+                        Fullscreen</button>
+                    <button class="btn btn-ghost" onclick="togglePreview(false)"><i class="ph-bold ph-x"></i>
+                        Close</button>
+                </div>
+            </div>
+            <div id="frame-wrap">
+                <iframe id="preview-frame"></iframe>
             </div>
         </div>
-        <textarea id="code-area" spellcheck="false" placeholder="// START_CODING_..."></textarea>
     </div>
 
-    <div id="preview">
-        <div class="preview-bar">
-            <div>
-                <p class="label-mono" style="margin:0; opacity:0.5;">PREVIEW_RUNTIME</p>
-                <span id="preview-fn" style="font-weight: 900; font-size: 18px; margin-left: 20px;">NODE</span>
-            </div>
-            <div style="display:flex; gap:12px;">
-                <button class="btn-swiss" onclick="launchFullscreen()">FULLSCREEN</button>
-                <button class="btn-swiss btn-outline" onclick="togglePreview(false)">EXIT</button>
-            </div>
-        </div>
-        <div id="frame-wrap">
-            <iframe id="preview-frame"></iframe>
-        </div>
-    </div>
+    <!-- Toast Notification -->
+    <div id="toast"><i class="ph-bold ph-check-circle"></i> <span>Ready</span></div>
 
     <script>
         let root = "";
-        let files = [];
         let activeFile = "";
-        let currentView = 'grid';
+        let activeFilePath = "";
+        let treeData = null;
+
+        
+        function switchSidebarPanel(panelId) {
+            document.querySelectorAll('.activity-item').forEach(item => item.classList.remove('active'));
+            document.querySelector(`.activity-item[title="${panelId.charAt(0).toUpperCase() + panelId.slice(1)}"]`).classList.add('active');
+            document.querySelectorAll('.sidebar-panel').forEach(panel => panel.classList.remove('active'));
+            document.getElementById(`panel-${panelId}`).classList.add('active');
+            if (panelId === 'search') document.getElementById('search-input').focus();
+        }
+
+        function performSearch() {
+            const query = document.getElementById('search-input').value.toLowerCase();
+            const resultsContainer = document.getElementById('search-results');
+            resultsContainer.innerHTML = '';
+            if (!query || !treeData) return;
+
+            const allFiles = [];
+            function flatten(node) {
+                if (!node.isDir) allFiles.push(node);
+                if (node.children) node.children.forEach(flatten);
+            }
+            flatten(treeData);
+
+            const matched = [];
+            allFiles.forEach(file => {
+                const nameLower = file.name.toLowerCase();
+                let score = fuzzyScore(query, nameLower);
+                if (score > 0) matched.push({ file, score });
+            });
+
+            matched.sort((a, b) => b.score - a.score);
+
+            matched.forEach(m => {
+                const el = document.createElement('div');
+                el.className = 'search-result-item';
+                let displayPath = m.file.path.replace(root, '').replace(/^\\|^\//, '');
+                if (!displayPath) displayPath = '/';
+                el.innerHTML = `
+                    <div class="search-result-name"><i class="ph-fill ph-file-html" style="margin-right:4px;"></i>${m.file.name}</div>
+                    <div class="search-result-path">${displayPath}</div>
+                `;
+                el.onclick = () => {
+                    openEditor(m.file.name, m.file.path);
+                    switchSidebarPanel('explorer'); // go back to explorer
+                };
+                resultsContainer.appendChild(el);
+            });
+        }
+
+        function fuzzyScore(query, target) {
+            let qIdx = 0, tIdx = 0, score = 0, consecutive = 0;
+            while (qIdx < query.length && tIdx < target.length) {
+                if (query[qIdx] === target[tIdx]) {
+                    score += 10 + (consecutive * 5);
+                    consecutive++;
+                    qIdx++;
+                } else {
+                    consecutive = 0;
+                }
+                tIdx++;
+            }
+            if (qIdx === query.length) {
+                if (target.startsWith(query)) score += 50;
+                score -= target.length;
+                return score;
+            }
+            return 0;
+        }
+
+        function applySettings() {
+            const theme = document.getElementById('setting-theme').value;
+            const isDark = document.body.classList.contains('dark');
+            if ((theme === 'dark' && !isDark) || (theme === 'light' && isDark)) toggleTheme();
+
+            document.getElementById('code-area').style.fontSize = document.getElementById('setting-fontsize').value;
+            document.getElementById('code-area').style.whiteSpace = document.getElementById('setting-wrap').value === 'on' ? 'pre-wrap' : 'pre';
+        }
+
+        function toggleTheme() {
+            document.body.classList.toggle('dark');
+            const isDark = document.body.classList.contains('dark');
+            document.getElementById('theme-toggle').innerHTML = isDark ? '<i class="ph-bold ph-sun"></i>' : '<i class="ph-bold ph-moon"></i>';
+        }
 
         function notify(msg) {
             const t = document.getElementById('toast');
-            t.innerText = msg.toUpperCase();
-            t.style.transform = "translateY(0)";
-            setTimeout(() => t.style.transform = "translateY(-100%)", 2000);
+            t.querySelector('span').innerText = msg;
+            t.classList.add('show');
+            setTimeout(() => t.classList.remove('show'), 3000);
+        }
+
+        function showLoader(show) {
+            const loader = document.getElementById('loader-overlay');
+            if (show) loader.classList.add('active');
+            else loader.classList.remove('active');
         }
 
         async function syncDirectory() {
-            if (!root) return notify("NO_DIR_MOUNTED");
+            if (!root) return notify("No directory mounted");
+            showLoader(true);
             await refreshUI();
-            notify("SYNC_OK");
-        }
-
-        function setView(v) {
-            currentView = v;
-            document.getElementById('card-grid').className = `card-container ${v}`;
-            document.getElementById('grid-btn').classList.toggle('btn-active', v === 'grid');
-            document.getElementById('list-btn').classList.toggle('btn-active', v === 'list');
-            renderCards();
+            showLoader(false);
+            notify("Refreshed successfully");
         }
 
         async function scanDirectory() {
             try {
-                root = await window.go.main.App.SelectFolder();
-                if (root) {
+                const selected = await window.go.main.App.SelectFolder();
+                if (selected) {
+                    root = selected;
                     document.getElementById('path-label').innerText = root;
-                    refreshUI();
-                    notify("MOUNTED");
+                    showLoader(true);
+                    await refreshUI();
+                    showLoader(false);
+                    notify("Folder opened");
+                    showWelcomeScreen(false);
                 }
-            } catch(e) { console.warn("Wails context required."); }
+            } catch (e) {
+                console.warn("Wails context required.", e);
+                showLoader(false);
+            }
         }
 
         async function refreshUI() {
             try {
-                files = await window.go.main.App.GetHTMLFiles(root);
-                document.getElementById('file-count').innerText = `${files.length.toString().padStart(2, '0')} OBJECTS`;
-                renderCards();
-            } catch(e) { notify("REFRESH_ERR"); }
+                treeData = await window.go.main.App.GetFileTree(root);
+                renderTree();
+            } catch (e) {
+                console.error(e);
+                notify("Error refreshing files");
+            }
         }
 
-        function renderCards() {
-            const grid = document.getElementById('card-grid');
-            grid.innerHTML = "";
-            files.forEach((f, i) => {
-                const card = document.createElement('div');
-                card.className = 'file-card';
-                card.innerHTML = `
-                    <div class="card-num">${(i+1).toString().padStart(2, '0')}</div>
-                    <div class="card-title">${f}</div>
-                    <div class="card-subtitle">APPLICATION // HTML_NODE</div>
-                    <div class="card-actions">
-                        <button class="btn-swiss btn-outline" onclick="openEditor('${f}')">EDIT</button>
-                        <button class="btn-swiss btn-outline" onclick="openPreview('${f}')">VIEW</button>
-                        <button class="btn-swiss btn-outline" onclick="handleDelete(event, '${f}')">DEL</button>
-                    </div>
-                `;
-                card.onclick = (e) => { if(e.target.tagName !== 'BUTTON') openEditor(f); };
-                grid.appendChild(card);
-            });
+        function renderTree() {
+            const container = document.getElementById('file-tree');
+            container.innerHTML = "";
+            if (!treeData) {
+                container.innerHTML = `<div style="padding: 10px; font-size: 13px; color: var(--text-muted); text-align: center;">No HTML files found.</div>`;
+                return;
+            }
+            container.appendChild(createTreeNode(treeData));
         }
 
-        function toggleEditor(show) { document.getElementById('editor').style.display = show ? 'grid' : 'none'; }
+        function createTreeNode(node) {
+            const el = document.createElement('div');
+            el.className = 'tree-node';
+
+            const item = document.createElement('div');
+            item.className = 'tree-item';
+            if (activeFilePath === node.path && !node.isDir) {
+                item.classList.add('active');
+            }
+
+            const icon = document.createElement('span');
+            icon.className = 'tree-icon';
+            icon.innerHTML = node.isDir ? '<i class="ph-bold ph-folder"></i>' : '<i class="ph-fill ph-file-html"></i>';
+
+            const label = document.createElement('span');
+            label.innerText = node.name;
+
+            item.appendChild(icon);
+            item.appendChild(label);
+            el.appendChild(item);
+
+            const childrenContainer = document.createElement('div');
+            childrenContainer.className = 'tree-children';
+
+            if (node.isDir && node.children) {
+                const sortedChildren = [...node.children].sort((a, b) => {
+                    if (a.isDir && !b.isDir) return -1;
+                    if (!a.isDir && b.isDir) return 1;
+                    return a.name.localeCompare(b.name);
+                });
+
+                sortedChildren.forEach(child => {
+                    childrenContainer.appendChild(createTreeNode(child));
+                });
+            }
+
+            el.appendChild(childrenContainer);
+
+            item.onclick = (e) => {
+                e.stopPropagation();
+                if (node.isDir) {
+                    const isHidden = childrenContainer.style.display === 'none';
+                    childrenContainer.style.display = isHidden ? 'block' : 'none';
+                    icon.innerHTML = isHidden ? '<i class="ph-bold ph-folder"></i>' : '<i class="ph-bold ph-folder-open"></i>';
+                } else {
+                    openEditor(node.name, node.path);
+                    document.querySelectorAll('.tree-item').forEach(i => i.classList.remove('active'));
+                    item.classList.add('active');
+                }
+            };
+
+            return el;
+        }
+
+        function showWelcomeScreen(show) {
+            document.getElementById('welcome-screen').style.display = show ? 'flex' : 'none';
+            document.getElementById('editor-container').style.display = show ? 'none' : 'flex';
+        }
+
         function togglePreview(show) { document.getElementById('preview').style.display = show ? 'flex' : 'none'; }
 
-        async function openEditor(f) {
-            activeFile = f;
+        async function openEditor(fileName, filePath) {
+            activeFile = fileName;
+            activeFilePath = filePath;
             try {
-                const content = await window.go.main.App.ReadFileContent(root, f);
+                showLoader(true);
+                const separator = filePath.includes('\\') ? '\\' : '/';
+                const relDir = filePath.substring(0, filePath.lastIndexOf(separator));
+
+                const content = await window.go.main.App.ReadFileContent(relDir, fileName);
                 document.getElementById('code-area').value = content;
-                document.getElementById('active-fn').innerText = f;
-                toggleEditor(true);
-            } catch (e) { notify("SYNC_ERR"); }
+                document.getElementById('active-fn').innerText = fileName;
+                showWelcomeScreen(false);
+                showLoader(false);
+            } catch (e) {
+                showLoader(false);
+                notify("Error opening file");
+            }
         }
 
         async function saveCode() {
+            showLoader(true);
             const content = document.getElementById('code-area').value;
-            const res = await window.go.main.App.SaveCode(root, activeFile, content);
+            const separator = activeFilePath.includes('\\') ? '\\' : '/';
+            const relDir = activeFilePath.substring(0, activeFilePath.lastIndexOf(separator));
+            const res = await window.go.main.App.SaveCode(relDir, activeFile, content);
+            showLoader(false);
             notify(res);
         }
 
         async function createFile() {
-            if(!root) return notify("MOUNT_FIRST");
+            if (!root) return notify("Please open a folder first");
             const res = await window.go.main.App.CreateFile(root);
-            if(res) { refreshUI(); notify("CREATED"); }
-        }
-
-        async function handleDelete(e, f) {
-            e.stopPropagation();
-            if(confirm(`Delete ${f}?`)) {
-                await window.go.main.App.DeleteFile(root, f);
-                refreshUI();
-                notify("DELETED");
+            if (res) {
+                showLoader(true);
+                await refreshUI();
+                showLoader(false);
+                notify("File created");
             }
         }
 
         async function openPreview(f) {
+            if (!activeFilePath) return;
             try {
-                const content = await window.go.main.App.ReadFileContent(root, f);
-                const blob = new Blob([content], {type: 'text/html'});
+                showLoader(true);
+                const separator = activeFilePath.includes('\\') ? '\\' : '/';
+                const relDir = activeFilePath.substring(0, activeFilePath.lastIndexOf(separator));
+                const content = await window.go.main.App.ReadFileContent(relDir, activeFile);
+                const blob = new Blob([content], { type: 'text/html' });
                 document.getElementById('preview-frame').src = URL.createObjectURL(blob);
-                document.getElementById('preview-fn').innerText = f.toUpperCase();
+                document.getElementById('preview-fn').innerText = activeFile;
                 togglePreview(true);
-            } catch (e) { notify("PREVIEW_ERR"); }
+                showLoader(false);
+            } catch (e) {
+                showLoader(false);
+                notify("Error generating preview");
+            }
         }
 
         function launchFullscreen() {
             const wrap = document.getElementById("frame-wrap");
             if (wrap.requestFullscreen) wrap.requestFullscreen();
         }
+
+        // Initialize state
+        showWelcomeScreen(true);
+        // Ensure theme toggle starts correctly
+        if (document.body.classList.contains('dark')) {
+            document.getElementById('theme-toggle').innerHTML = '<i class="ph-bold ph-sun"></i>';
+        }
     </script>
 </body>
+
 </html>
